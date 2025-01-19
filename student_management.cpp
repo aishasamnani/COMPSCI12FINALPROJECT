@@ -47,6 +47,7 @@ private: // private members
     string currentDateTime() const { //get the current date and time as a string
         chrono::time_point<chrono::system_clock> now = chrono::system_clock::now(); //chrono time point is a point in time, system clock is a system wide real time clock, system clock now returns current time point in clock and assigns value to now
         time_t time_now = chrono::system_clock::to_time_t(now); // timet represents time in seconds since Jan 1, 1970, it is a formatting tool for the chrono library, this line takes a timepoint object and converts it to a time_t object
+        time_now -= 5 * 3600; // problem with time zone, subtract 5 hours from time_now
         tm local_tm = *localtime(&time_now); //basically converts time value to a local time
 
         stringstream ss; //input/output for strings
@@ -54,7 +55,6 @@ private: // private members
         return ss.str(); //converts into string
     }
 };
-
 
 class Todo {
 };
