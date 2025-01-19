@@ -1,13 +1,14 @@
-#include <iostream> //standard input/output libaray
+#include <iostream> // input/output stream
+using namespace std; //use names for objects and variables from standard library (for us no std::)
 #include <fstream> //input/output stream to manage files
 #include <string> //need for when variable type is string as not standard in C++
 #include <chrono> // time manipulation
 #include <iomanip> // for put_time 
 #include <sstream> // for stringstream
 
-using namespace std; //use names for objects and variables from standard library (for us no std::)
-
-//---------------------------------------------------------------------------------------------------
+class Calendar {
+  
+};
 
 class Journal { // create class 
 public: // public members
@@ -54,8 +55,11 @@ private: // private members
     }
 };
 
-//-------------------------------------------------------------------------------------------------
 
+class Todo {
+};
+class Pass {
+};
 int main() {
     Journal myJournal; //call instance of class
     string entry; //creates string variable named entry to hold journal entries
@@ -73,3 +77,5 @@ int main() {
 
     return 0; // regular programming practice, j means program ended succesfully
 }
+
+
