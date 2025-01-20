@@ -1,8 +1,11 @@
-#include <iostream>
-// #include <stdio.h> 
-#include <iomanip> // library to use setw() for word formatting
-#include <string>
-using namespace std;
+#include <iostream> // input/output stream
+using namespace std; //use names for objects and variables from standard library (for us no std::)
+#include <fstream> //input/output stream to manage files
+#include <string> //need for when variable type is string as not standard in C++
+#include <chrono> // time manipulation
+#include <iomanip> // for put_time, library to use setw() for word formatting
+#include <sstream> // for stringstream
+// #include <stdio.h>
 
 class Calendar {
   private:
@@ -82,16 +85,56 @@ public:
     }
 };
 
-class Journal {
+class Journal { // create class 
+public: // public members
+    Journal() : filename("journal.txt") {} //initalize filename as journal -> this is a constructor, they  are a special class of members that are called by the compiler every time an object of that class is instantiated.
 
+//---------------------------------------------------------------------------------------------------
+
+    void journalEntry(const string& entry) { //writing journal
+        ofstream file(filename, ios::app); // open the file in append mode (ios is for input output stream, app is for append))
+        if (file) { // if the file is opened
+            file << entry << " [" << currentDateTime() << "]" << endl; //write inputted text and add the current date and time to the end of the file
+        } else { //otherwise
+            cerr << "Error, file was not opened." << endl; //print error message
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+    void readJournalEntry() const { //reading journal
+        ifstream file(filename); // open file for reading
+        if (file) { 
+            string line;
+            while (getline(file, line)) { //read each line of the file
+                cout << line << endl; // output each line to the console
+            }
+        } else {
+            cerr << "Error, file was not opened." << endl;
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+private: // private members
+    string filename; // store file name
+
+    string currentDateTime() const { //get the current date and time as a string
+        chrono::time_point<chrono::system_clock> now = chrono::system_clock::now(); //chrono time point is a point in time, system clock is a system wide real time clock, system clock now returns current time point in clock and assigns value to now
+        time_t time_now = chrono::system_clock::to_time_t(now); // timet represents time in seconds since Jan 1, 1970, it is a formatting tool for the chrono library, this line takes a timepoint object and converts it to a time_t object
+        time_now -= 5 * 3600; // problem with time zone, subtract 5 hours from time_now
+        tm local_tm = *localtime(&time_now); //basically converts time value to a local time
+
+        stringstream ss; //input/output for strings
+        ss << put_time(&local_tm, "%Y-%m-%d %X"); //put_time used to format time, contains local time, %digits represent year, month, day, (hours, minutes and seconds)
+        return ss.str(); //converts into string
+    }
 };
 
 class Todo {
-
 };
 
 class Pass {
-
 };
 
 int main() {
@@ -114,7 +157,7 @@ int main() {
   int userAction;
 
   while (true) {
-    cout << "\n\nWhat would you like to do?:\n1 - Create new login \n2 - Open calendar\n5 - Quit\nEnter a number: ";
+    cout << "\n\nWhat would you like to do?:\n1 - Create new login \n2 - Open calendar\n3 - Add to Personal Journal\n5 - Quit\nEnter a number: ";
     cin >> userAction;
 
     if (userAction == 2) {
@@ -135,7 +178,23 @@ int main() {
           calendar.displayMonth(month);
         }
     } 
+    
+    else if (userAction == 3) {
+      Journal myJournal; //call instance of class
+      string entry; //creates string variable named entry to hold journal entries
 
+      cout << "\n\nFeel free to write your journal entries, and type '0' to stop." << endl; //prints message
+      while (true) { //starts loop
+          cout << "\nJournal entry: "; //prints prompt for the user to type their entry
+          getline(cin, entry); //takes input and stores it in entry
+          if (entry == "0") break; //condition to break
+          myJournal.journalEntry(entry); //pass user input to file
+      }
+
+      cout << "\nJournal Entries:" << endl; //prints message saying here are the journal entries
+      myJournal.readJournalEntry(); //method to display all entries from file
+    }
+    
     else if (userAction == 5) { // Quit
         break;
     }
