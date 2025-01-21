@@ -5,9 +5,92 @@ using namespace std; //use names for objects and variables from standard library
 #include <chrono> // time manipulation
 #include <iomanip> // for put_time, library to use setw() for word formatting
 #include <sstream> // for stringstream
-// #include <stdio.h>
 #include <vector> // Include vector lets you use vectors which act as containers to store tasks
 #include <algorithm> // used for algorithms like sort
+#include <map> // to generate statistics
+
+class Statistics {
+public:
+    Statistics() {
+        loadStats(); // Saves statistics when initialized
+    }
+
+    // Adds a timestamp for a journal entry
+    void addEntryTimestamp(const string& timestamp) {
+        // Extract the day of the week and hour from the timestamp
+        int day, hour;
+        parseTimestamp(timestamp, day, hour); 
+        dailyEntries[day]++;
+        hourlyEntries[hour]++;
+        saveStats(); // saves statistics to files
+    }
+
+    void displayWeeklyStats() const { // Calculates and displays weekly productivity statistics
+        cout << "\nStarting from the first recorded date, here are your weekly productivity statistics over the past days (Format: Displays the day of the week (0-6, Sunday = 0)):" << endl;
+        for (const auto& [day, count] : dailyEntries) {
+            cout << "Day " << day << ": " << count << " entries" << endl;
+        }
+    }
+
+    void displayDailyStats() const { // Calculates and displays daily productivity statistics
+        cout << "\nFor today, here are your hourly productivity statistics (Format: Hour of the day is specified using a number (0-23) - 24-hr clock minus 1):" << endl; 
+        for (const auto& [hour, count] : hourlyEntries) {
+            cout << "Hour " << hour << ": " << count << " entries" << endl;
+        }
+    }
+
+private:
+    map<int, int> dailyEntries; // The Map tracks the number of entries per day of the week
+    map<int, int> hourlyEntries; // The Map tracks the number of entries per hour
+
+    // Parses the timestamp to extract the day and hour journal entry was made
+    void parseTimestamp(const string& timestamp, int& day, int& hour) const {
+        istringstream ss(timestamp);
+        tm t = {};
+        ss >> get_time(&t, "%Y-%m-%d %H:%M:%S");
+        day = t.tm_wday; // Displays the day of the week (0-6, i.e. Sunday = 0)
+        hour = t.tm_hour; // Specifies the hour of the day (0-23)
+    }
+
+    //------------------------------------------------------------------
+
+    void saveStats() const { // function to save statistics to files to keep track of productivity
+        ofstream dailyFile("dailyStats.txt");
+        ofstream hourlyFile("hourlyStats.txt");
+
+        for (const auto& [day, count] : dailyEntries) { // saves entries to a file so program can be run multiple times
+            dailyFile << day << " " << count << endl; 
+        }
+
+        for (const auto& [hour, count] : hourlyEntries) {
+            hourlyFile << hour << " " << count << endl;
+        }
+    }
+
+    //------------------------------------------------------
+
+    void loadStats() {  // loads statistics from files they were stored in
+                        // daily and hourly files to keep track of two statistics
+        ifstream dailyFile("dailyStats.txt");
+        ifstream hourlyFile("hourlyStats.txt");
+
+        if (dailyFile) { 
+            int day, count;
+            while (dailyFile >> day >> count) {
+                dailyEntries[day] = count;
+            }
+        }
+
+        if (hourlyFile) {
+            int hour, count;
+            while (hourlyFile >> hour >> count) {
+                hourlyEntries[hour] = count;
+            }
+        }
+    }
+
+};
+
 
 class Calendar {
   private:
@@ -53,19 +136,19 @@ class Calendar {
 
     // Prints formatted calendar
     void outputMonth(int month, int year) {
-      string monthsArray[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-      cout << "\n\n  " << monthsArray[month - 1] << " " << year << "\n";
-      cout << "  Sun  Mon  Tue  Wed  Thu  Fri  Sat\n";
+      string monthsArray[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}; // Array holds months as strings to interate through for calendar output
+      cout << "\n\n  " << monthsArray[month - 1] << " " << year << "\n"; // formats month and year
+      cout << "  Sun  Mon  Tue  Wed  Thu  Fri  Sat\n"; // outputs days of the week
 
       int startDay = getFirstDayOfYear(year);
-      for (int i = 1; i < month; i++) {
+      for (int i = 1; i < month; i++) { // determines the first day
         startDay = (startDay + getNumDaysInMonth(i, year)) % 7;
       }
 
       int numDaysInMonth = getNumDaysInMonth(month, year);
 
       for (int i = 0; i < startDay; i++) {
-        cout << "     ";
+        cout << "     "; // spaces out numbers to format in coloumns
       }
 
       for (int day = 1; day <= numDaysInMonth; day++) {
@@ -87,6 +170,7 @@ public:
     }
 };
 
+
 class Journal { // create class 
 public: // public members
     Journal() : filename("journal.txt") {} //initalize filename as journal -> this is a constructor, they  are a special class of members that are called by the compiler every time an object of that class is instantiated.
@@ -96,7 +180,9 @@ public: // public members
     void journalEntry(const string& entry) { //writing journal
         ofstream file(filename, ios::app); // open the file in append mode (ios is for input output stream, app is for append))
         if (file) { // if the file is opened
+            string timestamp = currentDateTime();
             file << entry << " [" << currentDateTime() << "]" << endl; //write inputted text and add the current date and time to the end of the file
+            stats.addEntryTimestamp(timestamp); // tracks entry timestamp creates
         } else { //otherwise
             cerr << "Error, file was not opened." << endl; //print error message
         }
@@ -115,11 +201,18 @@ public: // public members
             cerr << "Error, file was not opened." << endl;
         }
     }
+// -----------------------------------------------------
+   
+    void displayStats() const { // displays statistics for the week and day
+        stats.displayWeeklyStats(); 
+        stats.displayDailyStats();
+    }
 
 //---------------------------------------------------------------------------------------------------
 
 private: // private members
     string filename; // store file name
+    Statistics stats; // add Statistics member
 
     string currentDateTime() const { //get the current date and time as a string
         chrono::time_point<chrono::system_clock> now = chrono::system_clock::now(); //chrono time point is a point in time, system clock is a system wide real time clock, system clock now returns current time point in clock and assigns value to now
@@ -245,20 +338,12 @@ bool checkValidFile(const string& filename) {
 
 //---------------------------------------------------------------------------------------------------
 
-class Pass {
-};
 
 int main() {
     // Intro Lines
-    string userName;
-    string userPass;
     string name;
 
-    cout << "Welcome to <app name>!\n\nHere, you can journal your thoughts, stay on top of your assignments using to-do lists, and manage your weekly goals and schedule! \nTo get you started, lets set up an account for you.";
-    cout << "\n\nCreate Username (NOTE: all usernames/passwords/names must not include spaces): ";
-    cin >> userName;
-    cout << "\nCreate Password: ";
-    cin >> userPass;
+    cout << "Welcome to Task Buddy!\n\nHere, you can journal your thoughts, stay on top of your assignments using to-do lists, and manage your weekly goals and schedule! \nTo get you started, lets set up an account for you.";
     cout << "\nEnter Your Name: ";
     cin >> name;
 
@@ -268,11 +353,10 @@ int main() {
     int userAction;
 
     while (true) {
-        cout << "\n\nWhat would you like to do?:\n1 - Create new login \n2 - Open calendar\n3 - Add to Personal Journal\n4 - Manage To-Do List\n5 - Quit\nEnter a number: ";
+        cout << "\n\nWhat would you like to do?:\n1 - Open calendar\n2 - Add to Personal Journal\n3 - Manage To-Do List\n4 - Quit\nEnter a number: ";
         cin >> userAction;
 
-        if (userAction == 2) {
-            // Calendar - user input, prints monthly calendar
+        if (userAction == 1) { // Calendar - user input to print monthly calendar
             int currentYear, month;
 
             cout << "\n\nEnter the year: ";
@@ -290,7 +374,7 @@ int main() {
             }
         } 
 
-        else if (userAction == 3) {
+        else if (userAction == 2) {
             Journal myJournal; //call instance of class
             string entry; //creates string variable named entry to hold journal entries
 
@@ -304,9 +388,11 @@ int main() {
 
             cout << "\nJournal Entries:" << endl; //prints message saying here are the journal entries
             myJournal.readJournalEntry(); //method to display all entries from file
+
+            myJournal.displayStats(); // displays productivity statistics
         }
 
-        else if (userAction == 4) {
+        else if (userAction == 3) {
             Todo myTodoList;
             string filename, task;
             int choice, taskNumber;
@@ -384,7 +470,7 @@ int main() {
             }
         }
 
-        else if (userAction == 5) { // Quit
+        else if (userAction == 4) { // Quit
             break;
         }
 
