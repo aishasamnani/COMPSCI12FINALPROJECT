@@ -6,6 +6,8 @@ using namespace std; //use names for objects and variables from standard library
 #include <iomanip> // for put_time, library to use setw() for word formatting
 #include <sstream> // for stringstream
 // #include <stdio.h>
+#include <vector> // Include vector lets you use vectors which act as containers to store tasks
+#include <algorithm> // used for algorithms like sort
 
 class Calendar {
   private:
@@ -132,74 +134,261 @@ private: // private members
 };
 
 class Todo {
+public:
+    // create files -> each file for a to-do list of a dif category
+    void createFile(const string& filename) {
+        this->filename = filename; // this -> is a pointer in C++ and is used to access members of a class
+        ofstream file(filename); // output stream file, makes new file
+        if (!file) {
+            cerr << "File could not be created." << endl; // error msg
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+
+    void giveFilename(const string& filename) {
+        this->filename = filename;
+        loadTasks(); // this line will load tasks from the file of the name given
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+
+    // add a task to list
+    void addTask(const string& task) {
+        tasks.push_back(task);
+        saveTasks(); // this will save the written task to file
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+
+    // mark a task as completed
+    void completeTask(int taskNumber) {
+        if (taskNumber > 0 && taskNumber <= tasks.size()) { // checks if task number is within valid range, bwn 0 and size of tasks list
+            tasks[taskNumber - 1] += " [✓]"; // adds check mark to end of task to mark as completed
+            saveTasks();
+        } else {
+            cout << "Wrong task number inputted." << endl;
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+
+    // remove a task from  list
+    void deleteTask(int taskNumber) {
+        if (taskNumber > 0 && taskNumber <= tasks.size()) {
+            tasks.erase(tasks.begin() + taskNumber - 1); // take away the task at the position of the task number
+            saveTasks();
+        } else {
+            cout << "Wrong task number inputted." << endl;
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+
+    // display tasks in alphabetical order
+    void displayTasks() const {
+        vector<string> sortedTasks = tasks; // this copies and saves the tasks in a new vector
+        sort(sortedTasks.begin(), sortedTasks.end()); // function from alogrithm that sorts them alphabetically
+
+        cout << endl; // newline for proper formatting, makes everything look nice and neat 
+
+        for (int i = 0; i < sortedTasks.size(); ++i) { // loop continues as long as i is smaller than the size of the sorted tasks
+            cout << (i + 1) << ". " << sortedTasks[i] << endl; // iteration, increments by one and prints tasks
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+
+    // load tasks from the file
+    void loadTasks() {
+        tasks.clear(); // gets rid of the current tasks
+        ifstream file(filename);
+        if (file) {
+            string task;
+            while (getline(file, task)) {
+                tasks.push_back(task); // reads tasks from the file
+            }
+        } else {
+            cout << "File couldnt be found." << endl;
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------
+
+
+private:
+    string filename; // store file name
+    vector<string> tasks; // store tasks and whether or not they have been completed
+
+    // save tasks to the file
+    void saveTasks() const {
+        ofstream file(filename); //open file
+        for (const string& task : tasks) { //loop iterates over task
+            file << task << endl; // writes task to file
+        }
+    }
 };
+
+//---------------------------------------------------------------------------------------------------
+
+// check if valid file was entered when typed for a specific part of drop down section
+bool checkValidFile(const string& filename) {
+    ifstream file(filename);
+    return file.good();
+}
+
+//---------------------------------------------------------------------------------------------------
 
 class Pass {
 };
 
 int main() {
-  // Intro Lines
-  string userName;
-  string userPass;
-  string name;
+    // Intro Lines
+    string userName;
+    string userPass;
+    string name;
 
-  cout << "Welcome to <app name>!\n\nHere, you can journal your thoughts, stay on top of your assignments using to-do lists, and manage your weekly goals and schedule! \nTo get you started, lets set up an account for you.";
-  cout << "\n\nCreate Username (NOTE: all usernames/passwords/names must not include spaces): ";
-  cin >> userName;
-  cout << "\nCreate Password: ";
-  cin >> userPass;
-  cout << "\nEnter Your Name: ";
-  cin >> name;
+    cout << "Welcome to <app name>!\n\nHere, you can journal your thoughts, stay on top of your assignments using to-do lists, and manage your weekly goals and schedule! \nTo get you started, lets set up an account for you.";
+    cout << "\n\nCreate Username (NOTE: all usernames/passwords/names must not include spaces): ";
+    cin >> userName;
+    cout << "\nCreate Password: ";
+    cin >> userPass;
+    cout << "\nEnter Your Name: ";
+    cin >> name;
 
-  cout << ("\n⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅");
-  cout << "\n\nWelcome, " << name;
+    cout << ("\n⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅⋆*✩‧₊⋆꙳❅");
+    cout << "\n\nWelcome, " << name;
 
-  int userAction;
+    int userAction;
 
-  while (true) {
-    cout << "\n\nWhat would you like to do?:\n1 - Create new login \n2 - Open calendar\n3 - Add to Personal Journal\n5 - Quit\nEnter a number: ";
-    cin >> userAction;
+    while (true) {
+        cout << "\n\nWhat would you like to do?:\n1 - Create new login \n2 - Open calendar\n3 - Add to Personal Journal\n4 - Manage To-Do List\n5 - Quit\nEnter a number: ";
+        cin >> userAction;
 
-    if (userAction == 2) {
-        // Calendar - user input, prints monthly calendar
-        int currentYear, month;
+        if (userAction == 2) {
+            // Calendar - user input, prints monthly calendar
+            int currentYear, month;
 
-        cout << "\n\nEnter the year: ";
-        cin >> currentYear;
+            cout << "\n\nEnter the year: ";
+            cin >> currentYear;
 
-        cout << "Enter which month you would like to view in the calendar (1-12): ";
-        cin >> month;
+            cout << "Enter which month you would like to view in the calendar (1-12): ";
+            cin >> month;
 
-        if (month < 1 || month > 12) {
-          cout << "Invalid month. Please enter a number between 1 and 12." << endl;
-          return 1;
-        } else {
-          Calendar calendar(currentYear);
-          calendar.displayMonth(month);
+            if (month < 1 || month > 12) {
+                cout << "Invalid month. Please enter a number between 1 and 12." << endl;
+                return 1;
+            } else {
+                Calendar calendar(currentYear);
+                calendar.displayMonth(month);
+            }
+        } 
+
+        else if (userAction == 3) {
+            Journal myJournal; //call instance of class
+            string entry; //creates string variable named entry to hold journal entries
+
+            cout << "\n\nFeel free to write your journal entries, and type '0' to stop." << endl; //prints message
+            while (true) { //starts loop
+                cout << "\nJournal entry: "; //prints prompt for the user to type their entry
+                getline(cin, entry); //takes input and stores it in entry
+                if (entry == "0") break; //condition to break
+                myJournal.journalEntry(entry); //pass user input to file
+            }
+
+            cout << "\nJournal Entries:" << endl; //prints message saying here are the journal entries
+            myJournal.readJournalEntry(); //method to display all entries from file
         }
-    } 
-    
-    else if (userAction == 3) {
-      Journal myJournal; //call instance of class
-      string entry; //creates string variable named entry to hold journal entries
 
-      cout << "\n\nFeel free to write your journal entries, and type '0' to stop." << endl; //prints message
-      while (true) { //starts loop
-          cout << "\nJournal entry: "; //prints prompt for the user to type their entry
-          getline(cin, entry); //takes input and stores it in entry
-          if (entry == "0") break; //condition to break
-          myJournal.journalEntry(entry); //pass user input to file
-      }
+        else if (userAction == 4) {
+            Todo myTodoList;
+            string filename, task;
+            int choice, taskNumber;
 
-      cout << "\nJournal Entries:" << endl; //prints message saying here are the journal entries
-      myJournal.readJournalEntry(); //method to display all entries from file
+            while (true) {
+                // drop down menu for user
+                cout << "\n1. Make new file" << endl;
+                cout << "2. Add task" << endl;
+                cout << "3. Finish task" << endl;
+                cout << "4. Delete task" << endl;
+                cout << "5. Display tasks (alphabetically)" << endl;
+                cout << "6. Exit" << endl;
+                cout << "Enter your choice: ";
+                cin >> choice;
+
+                cin.ignore(); // if not added, cin adds a newline that doesnt allow you to input anything and will automatically print error message that you did not enter a valid choice.
+
+                switch (choice) {
+                    case 1: //make new file
+                        cout << "\nPlease enter the name of the file you would like to create: ";
+                        getline(cin, filename);
+                        myTodoList.createFile(filename);
+                        break;
+                    case 2: // add task
+                        cout << "\nPlease enter the filename you would like to add a task to: ";
+                        getline(cin, filename);
+                        if (!checkValidFile(filename)) {
+                            cout << "Invalid filename. Please try again." << endl; // error messaging using checkvalidfile function
+                            break;
+                        }
+                        myTodoList.giveFilename(filename);
+                        cout << "\nEnter a new task: ";
+                        getline(cin, task);
+                        myTodoList.addTask(task);
+                        break;
+                    case 3: // finish task
+                        cout << "\nPlease enter the filename you would like to complete a task in: ";
+                        getline(cin, filename);
+                        if (!checkValidFile(filename)) {
+                            cout << "Invalid filename. Please try again." << endl;
+                            break;
+                        }
+                        myTodoList.giveFilename(filename);
+                        cout << "\nPlease enter the task number assigned to mark as complete: ";
+                        cin >> taskNumber;
+                        myTodoList.completeTask(taskNumber);
+                        break;
+                    case 4:// delete task
+                        cout << "\nPlease enter the filename you would like to delete a task from: ";
+                        getline(cin, filename);
+                        if (!checkValidFile(filename)) {
+                            cout << "Invalid filename. Please try again." << endl;
+                            break;
+                        }
+                        myTodoList.giveFilename(filename);
+                        cout << "\nPlease enter the task number assigned to delete: ";
+                        cin >> taskNumber;
+                        myTodoList.deleteTask(taskNumber);
+                        break;
+                    case 5: // display tasks
+                        cout << "\nPlease enter the filename whose tasks you would like to display: ";
+                        getline(cin, filename);
+                        if (!checkValidFile(filename)) {
+                            cout << "Invalid filename. Please try again." << endl;
+                            break;
+                        }
+                        myTodoList.giveFilename(filename);
+                        myTodoList.displayTasks();
+                        break;
+                    case 6: // exit/return to main menu
+                        return 0;
+                    default: // default option if user doesnt enter a valid choice (comes with switches in C++)
+                        cout << "\nYou did not enter a valid choice, try again. " << endl;
+                }
+            }
+        }
+
+        else if (userAction == 5) { // Quit
+            break;
+        }
+
     }
-    
-    else if (userAction == 5) { // Quit
-        break;
-    }
 
-  }
-
-  return 0;
+    return 0;
 }
