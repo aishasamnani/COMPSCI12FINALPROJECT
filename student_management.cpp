@@ -379,6 +379,7 @@ int main() {
             string entry; //creates string variable named entry to hold journal entries
 
             cout << "\n\nFeel free to write your journal entries, and type '0' to stop." << endl; //prints message
+            cin.ignore();
             while (true) { //starts loop
                 cout << "\nJournal entry: "; //prints prompt for the user to type their entry
                 getline(cin, entry); //takes input and stores it in entry
